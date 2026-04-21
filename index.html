@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Test #3 – Study App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4ff; color: #1a1a2e; min-height: 100vh; }
+
+    header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 18px 16px 14px; text-align: center; }
+    header h1 { font-size: 1.3rem; font-weight: 700; }
+    header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+
+    .tabs { display: flex; background: #fff; border-bottom: 2px solid #e5e7eb; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab-btn { flex: 1; min-width: 80px; padding: 12px 6px; background: none; border: none; font-size: 0.78rem; font-weight: 600; color: #6b7280; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+
+    .section { display: none; padding: 16px; max-width: 640px; margin: 0 auto; }
+    .section.active { display: block; }
+
+    .card { background: white; border-radius: 14px; padding: 18px; margin-bottom: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+    .card-title { font-size: 1rem; font-weight: 700; color: #4f46e5; margin-bottom: 12px; }
+
+    /* ── Vocab navigation ── */
+    .vocab-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      background: white; border-radius: 14px; padding: 12px 16px;
+      margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .nav-btn {
+      background: #4f46e5; color: white; border: none; border-radius: 8px;
+      padding: 8px 16px; font-size: 0.88rem; font-weight: 700; cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .nav-btn:active { transform: scale(0.95); }
+    .nav-btn:disabled { background: #e5e7eb; color: #9ca3af; cursor: default; }
+    .nav-counter { font-size: 0.9rem; font-weight: 700; color: #374151; text-align: center; }
+    .nav-counter span { display: block; font-size: 0.72rem; font-weight: 500; color: #9ca3af; margin-top: 2px; }
+
+    /* ── Word bank ── */
+    .word-bank { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; padding: 12px; background: #f0f4ff; border-radius: 10px; min-height: 48px; }
+    .word-chip { background: #4f46e5; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; user-select: none; transition: transform 0.1s, opacity 0.2s, background 0.15s, box-shadow 0.15s; touch-action: manipulation; }
+    .word-chip:hover { background: #4338ca; }
+    .word-chip.selected { background: #7c3aed; box-shadow: 0 0 0 3px #c4b5fd; transform: scale(1.07); }
+    .word-chip.used { opacity: 0.28; cursor: default; pointer-events: none; }
+    .word-chip.dragging { opacity: 0.4; }
+
+    /* ── Drop zones ── */
+    .passage { font-size: 0.95rem; line-height: 2.3; color: #374151; }
+    .drop-zone {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 110px; height: 30px; border-bottom: 2.5px solid #4f46e5;
+      background: transparent; color: #9ca3af; font-size: 0.85rem; font-style: italic;
+      cursor: pointer; vertical-align: middle; border-radius: 4px 4px 0 0;
+      padding: 0 6px; transition: background 0.15s, border-color 0.15s; user-select: none;
+    }
+    .drop-zone.drag-over { background: #ede9fe; border-bottom-color: #7c3aed; }
+    .drop-zone.filled { color: #4f46e5; font-style: normal; font-weight: 600; font-size: 0.93rem; }
+    .drop-zone.correct { color: #16a34a; border-bottom-color: #16a34a; background: #f0fdf4; }
+    .drop-zone.wrong   { color: #dc2626; border-bottom-color: #dc2626; background: #fff1f2; }
+    .drop-zone.hint-target { background: #fef9c3; border-bottom-color: #f59e0b; }
+
+    .hint-bar { font-size: 0.78rem; color: #9ca3af; margin-bottom: 6px; min-height: 18px; }
+    .hint-bar.active { color: #7c3aed; font-weight: 600; }
+
+    /* ── Buttons ── */
+    .btn { padding: 10px 20px; border-radius: 10px; border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: transform 0.1s; touch-action: manipulation; }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary   { background: #4f46e5; color: white; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-row { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .score-badge { display: inline-block; padding: 5px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; margin-top: 10px; }
+    .score-badge.good { background: #dcfce7; color: #16a34a; }
+    .score-badge.ok   { background: #fef9c3; color: #92400e; }
+    .score-badge.bad  { background: #fee2e2; color: #dc2626; }
+
+    /* ── Grammar ── */
+    .gram-item { margin-bottom: 18px; padding: 14px; background: #f9fafb; border-radius: 10px; border-left: 4px solid #4f46e5; font-size: 0.93rem; line-height: 1.7; }
+    .gram-input { border: none; border-bottom: 2px solid #4f46e5; background: transparent; font-size: 0.93rem; font-family: inherit; width: 140px; outline: none; padding: 0 4px; text-align: center; }
+    .gram-input.correct { border-bottom-color: #16a34a; color: #16a34a; }
+    .gram-input.wrong   { border-bottom-color: #dc2626; color: #dc2626; }
+    .answer-reveal { font-size: 0.82rem; color: #6b7280; margin-top: 6px; display: none; }
+    .answer-reveal.show { display: block; }
+    .answer-reveal strong { color: #16a34a; }
+
+    /* ── Word list ── */
+    .word-section { margin-bottom: 20px; }
+    .word-section h3 { font-size: 0.88rem; font-weight: 700; color: #7c3aed; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 2px solid #ede9fe; }
+    .word-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .word-item { background: #f9fafb; border-radius: 8px; padding: 8px 10px; font-size: 0.85rem; border: 1px solid #e5e7eb; cursor: pointer; transition: background 0.15s; }
+    .word-item .pos { font-size: 0.68rem; color: #9ca3af; text-transform: uppercase; display: block; margin-bottom: 1px; }
+
+    /* ── Connectors ── */
+    .conn-group { margin-bottom: 16px; }
+    .conn-group h3 { font-size: 0.85rem; font-weight: 700; color: #4f46e5; margin-bottom: 8px; }
+    .conn-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #f9fafb; border-radius: 8px; margin-bottom: 5px; font-size: 0.88rem; }
+    .conn-row .en { font-weight: 600; }
+    .conn-row .he { color: #6b7280; font-size: 0.82rem; direction: rtl; }
+
+    /* ── Writing ── */
+    .tip-card { background: #fef9c3; border-radius: 10px; padding: 14px; margin-bottom: 12px; border-left: 4px solid #f59e0b; font-size: 0.88rem; line-height: 1.6; }
+    .tip-card h4 { font-size: 0.9rem; margin-bottom: 6px; color: #92400e; }
+    .sample-text { background: #f0fdf4; border-radius: 10px; padding: 14px; font-size: 0.88rem; line-height: 1.75; border-left: 4px solid #16a34a; color: #374151; }
+    .sample-text .highlight { color: #4f46e5; font-weight: 700; }
+    .sample-text .irr       { color: #dc2626; font-weight: 700; }
+
+    /* ── Verb table ── */
+    .verb-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .verb-table th { background: #4f46e5; color: white; padding: 8px; text-align: left; }
+    .verb-table td { padding: 7px 8px; border-bottom: 1px solid #e5e7eb; }
+    .verb-table tr:nth-child(even) td { background: #f9fafb; }
+
+    .vocab-card { display: none; }
+    .vocab-card.active { display: block; }
+
+    /* ── Score bar ── */
+    .score-bar {
+      display: flex; justify-content: space-around; align-items: center;
+      background: #1e1b4b; color: white; padding: 8px 12px; font-size: 0.8rem;
+      gap: 6px; flex-wrap: wrap;
+    }
+    .score-bar-item { display: flex; align-items: center; gap: 5px; }
+    .score-bar-item span { font-weight: 700; }
+    .score-pill {
+      background: rgba(255,255,255,0.15); border-radius: 12px;
+      padding: 2px 10px; font-weight: 700;
+    }
+    .score-pill.great { background: #16a34a; }
+    .score-pill.good  { background: #d97706; }
+    .score-pill.low   { background: #dc2626; }
+
+    /* ── Connectors multiple choice ── */
+    .conn-exercise { margin-bottom: 20px; }
+    .conn-sentence {
+      font-size: 0.95rem; line-height: 1.8; color: #374151;
+      background: #f9fafb; border-radius: 10px; padding: 14px;
+      border-left: 4px solid #4f46e5; margin-bottom: 10px;
+    }
+    .conn-blank { color: #4f46e5; font-weight: 700; font-size: 1.05rem; }
+    .conn-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .conn-opt {
+      padding: 7px 14px; border-radius: 20px; border: 2px solid #e5e7eb;
+      background: white; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; color: #374151; touch-action: manipulation;
+    }
+    .conn-opt:hover { border-color: #4f46e5; color: #4f46e5; }
+    .conn-opt.selected { background: #4f46e5; color: white; border-color: #4f46e5; }
+    .conn-opt.correct  { background: #16a34a; color: white; border-color: #16a34a; }
+    .conn-opt.wrong    { background: #dc2626; color: white; border-color: #dc2626; }
+    .conn-opt.reveal   { background: #dcfce7; color: #16a34a; border-color: #16a34a; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📚 English Test #3 Study App</h1>
+  <p>7th Grade A1 &nbsp;|&nbsp; Test Date: April 28, 2026</p>
+</header>
+
+<div class="score-bar">
+  <div class="score-bar-item">📝 Vocab <span id="sv" class="score-pill">0/0</span></div>
+  <div class="score-bar-item">✏️ Grammar <span id="sg" class="score-pill">0/0</span></div>
+  <div class="score-bar-item">🔗 Connectors <span id="sc" class="score-pill">0/0</span></div>
+  <div class="score-bar-item">⭐ Total <span id="st" class="score-pill">–</span></div>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showTab('vocab',this)">📝 Vocab</button>
+  <button class="tab-btn" onclick="showTab('grammar',this)">✏️ Grammar</button>
+  <button class="tab-btn" onclick="showTab('connectors',this)">🔗 Connectors</button>
+  <button class="tab-btn" onclick="showTab('words',this)">📖 Words</button>
+  <button class="tab-btn" onclick="showTab('writing',this)">🖊️ Writing</button>
+  <button class="tab-btn" onclick="showTab('verbs',this)">🔀 Verbs</button>
+</nav>
+
+<!-- ══════════════ VOCABULARY ══════════════ -->
+<section id="vocab" class="section active">
+  <div class="vocab-nav">
+    <button class="nav-btn" id="btn-prev" onclick="navigate(-1)" disabled>◀ Prev</button>
+    <div class="nav-counter">
+      <strong id="nav-label">Text 1 / 24</strong>
+      <span id="nav-title"></span>
+    </div>
+    <button class="nav-btn" id="btn-next" onclick="navigate(1)">Next ▶</button>
+  </div>
+  <div id="vocab-container"></div>
+</section>
+
+<!-- ══════════════ GRAMMAR ══════════════ -->
+<section id="grammar" class="section">
+  <div class="vocab-nav">
+    <button class="nav-btn" id="gram-btn-prev" onclick="navigateGram(-1)" disabled>◀ Prev</button>
+    <div class="nav-counter">
+      <strong id="gram-nav-label">Q 1–5 / 200</strong>
+      <span id="gram-nav-sub">Affirmative</span>
+    </div>
+    <button class="nav-btn" id="gram-btn-next" onclick="navigateGram(1)">Next ▶</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Past Simple – Fill in the blanks</div>
+    <p style="font-size:0.82rem;color:#6b7280;margin-bottom:14px;">Write the correct Past Simple form of the verb in brackets.</p>
+    <div id="gram-items"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="checkGrammar()">Check ✓</button>
+      <button class="btn btn-secondary" onclick="resetGrammar()">Reset</button>
+    </div>
+    <div id="gram_score"></div>
+  </div>
+</section>
+
+<!-- ══════════════ CONNECTORS ══════════════ -->
+<section id="connectors" class="section">
+  <div class="vocab-nav">
+    <button class="nav-btn" id="conn-btn-prev" onclick="navigateConn(-1)" disabled>◀ Prev</button>
+    <div class="nav-counter">
+      <strong id="conn-nav-label">Q 1–5 / 100</strong>
+      <span id="conn-nav-sub">Result</span>
+    </div>
+    <button class="nav-btn" id="conn-btn-next" onclick="navigateConn(1)">Next ▶</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Connectors – Choose the correct word</div>
+    <p style="font-size:0.82rem;color:#6b7280;margin-bottom:14px;">Read the sentence and tap the connector that fits best.</p>
+    <div id="conn-items"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="checkConn()">Check ✓</button>
+      <button class="btn btn-secondary" onclick="resetConn()">Reset</button>
+    </div>
+    <div id="conn_score"></div>
+  </div>
+</section>
+
+<!-- ══════════════ WORD LIST ══════════════ -->
+<section id="words" class="section">
+  <div class="card">
+    <p style="font-size:0.82rem;color:#6b7280;margin-bottom:14px;">לחץ על מילה כדי לראות את התרגום</p>
+    <div class="word-section"><h3>📄 Book p. 62</h3><div class="word-grid" id="wg62"></div></div>
+    <div class="word-section"><h3>📄 Book p. 72</h3><div class="word-grid" id="wg72"></div></div>
+    <div class="word-section"><h3>📄 Book p. 90</h3><div class="word-grid" id="wg90"></div></div>
+  </div>
+</section>
+
+<!-- ══════════════ WRITING ══════════════ -->
+<section id="writing" class="section">
+  <div class="card">
+    <div class="card-title">Writing Task – What to do</div>
+    <div class="tip-card">
+      <h4>📋 Requirements</h4>
+      Write <strong>6–10 sentences</strong> about a <strong>past experience</strong>.<br>
+      Use at least <strong>2 irregular verbs</strong> in Past Simple.<br>
+      Use at least <strong>2 connectors</strong>.<br>
+      Check: capital letters, punctuation, spelling.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Connectors Table</div>
+    <div class="conn-group"><h3>📌 Order (סדר)</h3>
+      <div class="conn-row"><span class="en">First, / Second, / Then / Next / Finally</span><span class="he">ראשית / שנית / ואז / לאחר מכן / לבסוף</span></div>
+    </div>
+    <div class="conn-group"><h3>📌 Contrast (ניגוד)</h3>
+      <div class="conn-row"><span class="en">However,</span><span class="he">אולם</span></div>
+      <div class="conn-row"><span class="en">Although / Even though</span><span class="he">למרות / אף על פי</span></div>
+      <div class="conn-row"><span class="en">On the one hand… On the other hand</span><span class="he">מצד אחד… מצד שני</span></div>
+    </div>
+    <div class="conn-group"><h3>📌 Result (תוצאה)</h3>
+      <div class="conn-row"><span class="en">Therefore, / As a result, / For this reason</span><span class="he">לכן / כתוצאה מכך / מסיבה זו</span></div>
+    </div>
+    <div class="conn-group"><h3>📌 Addition (הוספה)</h3>
+      <div class="conn-row"><span class="en">In addition, / also / as well as</span><span class="he">נוסף על כך / גם / כמו גם</span></div>
+    </div>
+    <div class="conn-group"><h3>📌 Example (דוגמה)</h3>
+      <div class="conn-row"><span class="en">For example, / For instance,</span><span class="he">לדוגמה / למשל</span></div>
+    </div>
+    <div class="conn-group"><h3>📌 Summary (סיכום)</h3>
+      <div class="conn-row"><span class="en">To sum up, / In conclusion,</span><span class="he">לסיכום</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">✅ Sample Paragraph</div>
+    <div class="sample-text">
+      Last summer, my family <span class="irr">went</span> on a trip to Eilat.
+      <span class="highlight">First,</span> we <span class="irr">drove</span> for four hours and arrived at the hotel.
+      The beach was amazing and we <span class="highlight">also</span> visited the underwater observatory.
+      <span class="highlight">However,</span> one day it was too hot to go outside.
+      <span class="highlight">As a result,</span> we stayed in the hotel and watched movies.
+      <span class="highlight">In conclusion,</span> it was one of the best vacations we ever had.
+    </div>
+    <p style="font-size:0.78rem;color:#6b7280;margin-top:8px;">
+      <span style="color:#4f46e5;font-weight:700;">■</span> Connectors &nbsp;&nbsp;
+      <span style="color:#dc2626;font-weight:700;">■</span> Irregular verbs
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════ VERB LIST ══════════════ -->
+<section id="verbs" class="section">
+  <div class="card">
+    <div class="card-title">Irregular Verbs – Past Simple</div>
+    <p style="font-size:0.82rem;color:#6b7280;margin-bottom:12px;">Common irregular verbs you need to know:</p>
+    <table class="verb-table">
+      <thead><tr><th>Base</th><th>Past Simple</th><th>Hebrew</th></tr></thead>
+      <tbody id="verb-tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+// ── Tab navigation ─────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+//  PASSAGES DATA
+// ══════════════════════════════════════════════════════
+const PASSAGES = [
+  {
+    id:'p1', title:'Travelling Abroad',
+    words:['advantage','central','flight','passenger','pilot','remain','useful','vacation'],
+    segments:[
+      'Every summer, my family likes to plan a ',{n:1,answer:'vacation'},
+      ' to a different country. Last year, we decided to travel to Italy and booked a ',{n:2,answer:'flight'},
+      ' from Tel Aviv to Rome. Before we boarded the plane, the ',{n:3,answer:'pilot'},
+      ' spoke to everyone and explained the safety rules. Each ',{n:4,answer:'passenger'},
+      ' had to follow the instructions carefully and turn off their phones. When we arrived, we found a hotel in the ',{n:5,answer:'central'},
+      ' part of the city, which was very convenient. One big ',{n:6,answer:'advantage'},
+      ' of staying there was that we could walk to all the famous sights without needing a car.',
+    ]
+  },
+  {
+    id:'p2', title:'The Movie Hero',
+    words:['adventure','although','arrival','energy','hero','manage','save','wonderful'],
+    segments:[
+      'Last weekend, I watched an amazing movie about a young ',{n:1,answer:'hero'},
+      ' who lived in a small village. His mission was to ',{n:2,answer:'save'},
+      ' his town from a terrible storm that was coming. ',{n:3,answer:'although'},
+      ' everyone around him was scared and wanted to give up, he kept going. He seemed to have endless ',{n:4,answer:'energy'},
+      ' and never stopped trying to find a solution. After many difficult challenges, he managed to ',{n:5,answer:'manage'},
+      ' and protect all the people he loved. The ',{n:6,answer:'arrival'},
+      ' of the rescue team at the very end was truly ',{n:7,answer:'wonderful'},' to watch.',
+    ]
+  },
+  {
+    id:'p3', title:'The Mystery Island',
+    words:['additional','disappear','island','mystery','ocean','suddenly','survive','wonder'],
+    segments:[
+      'Many years ago, a group of sailors found a small ',{n:1,answer:'island'},
+      ' far away in the middle of the ',{n:2,answer:'ocean'},
+      '. They decided to stay there for a few days and explore the area. On the second night, one of the sailors ',{n:3,answer:'disappeared'},
+      ' without leaving any clues behind. Nobody could explain what happened, and it became a ',{n:4,answer:'mystery'},
+      ' that people still talk about today. The rest of the crew had to ',{n:5,answer:'survive'},
+      ' on the island for two more weeks before help arrived. I often ',{n:6,answer:'wonder'},
+      ' what really happened to that sailor, and whether we will ever find out the truth.',
+    ]
+  },
+  {
+    id:'p4', title:'The Storm at Sea',
+    words:['admit','control','deep','definitely','however','peace','respond','sign'],
+    segments:[
+      'Last year, my family took a boat trip across a ',{n:1,answer:'deep'},
+      ' lake in the north of the country. At first, everything was calm and we felt a great sense of ',{n:2,answer:'peace'},
+      ' on the water. ',{n:3,answer:'however'},
+      ', after an hour, the weather changed and the waves became very strong. The captain tried to keep ',{n:4,answer:'control'},
+      ' of the boat, but it was very difficult. I have to ',{n:5,answer:'admit'},
+      ' that I was quite frightened, even though I tried not to show it. When we finally saw a ',{n:6,answer:'sign'},
+      ' for the harbor, we knew we would be safe very soon.',
+    ]
+  },
+  {
+    id:'p5', title:'A City of Faith',
+    words:['Christian','church','country','insist','mosque','near','synagogue','take a tour'],
+    segments:[
+      'Jerusalem is one of the most special cities in the world. Tourists from every ',{n:1,answer:'country'},
+      ' come here to learn about its rich history. In the old city, you can find a beautiful ',{n:2,answer:'church'},
+      ' that is very important to Christians, a golden-domed ',{n:3,answer:'mosque'},
+      ' where Muslims come to pray, and a ',{n:4,answer:'synagogue'},
+      ' that is sacred to Jewish people. All three holy places are located very ',{n:5,answer:'near'},
+      ' each other. Our teacher decided to ',{n:6,answer:'take a tour'},
+      ' of the entire old city so that we could understand the history of each religion.',
+    ]
+  },
+  {
+    id:'p6', title:'The Big Football Match',
+    words:['although','beat','energy','fight','hero','manage','throughout','wonderful'],
+    segments:[
+      'Last Saturday, our school team played in the most exciting football game of the year. ',{n:1,answer:'although'},
+      ' the other team was bigger and stronger, our players never gave up. ',{n:2,answer:'throughout'},
+      ' the whole game, our goalkeeper was the real ',{n:3,answer:'hero'},
+      ' and stopped almost every shot. Our team played with so much ',{n:4,answer:'energy'},
+      ' that the crowd could not stop cheering. In the last minute, we finally ',{n:5,answer:'managed'},
+      ' to score the winning goal. It was a ',{n:6,answer:'wonderful'},
+      ' moment that I will never forget.',
+    ]
+  },
+  {
+    id:'p7', title:'A Space Mission',
+    words:['action','adventure','Earth','energy','impossible','land','manage','space'],
+    segments:[
+      'Last night I read a great book about a group of astronauts who went on an ',{n:1,answer:'adventure'},
+      ' to explore outer ',{n:2,answer:'space'},
+      '. Their mission was to travel far from ',{n:3,answer:'Earth'},
+      ' and find a new planet. Everyone said it was ',{n:4,answer:'impossible'},
+      ', but the crew did not listen. The story was full of exciting ',{n:5,answer:'action'},
+      ' and the astronauts had to use all their ',{n:6,answer:'energy'},
+      ' to fly through a dangerous storm. At the end, they finally ',{n:7,answer:'managed'},
+      ' to ',{n:8,answer:'land'},
+      ' safely on the new planet.',
+    ]
+  },
+  {
+    id:'p8', title:'Ready for Take-Off',
+    words:['arrival','flight','passenger','pilot','plane','remain','take off','vacation'],
+    segments:[
+      'We were all very excited because our summer ',{n:1,answer:'vacation'},
+      ' was finally starting. When we got to the airport, we saw our ',{n:2,answer:'plane'},
+      ' waiting on the runway. The ',{n:3,answer:'pilot'},
+      ' spoke over the microphone and welcomed everyone on board. Each ',{n:4,answer:'passenger'},
+      ' was asked to sit down and fasten their seatbelt. The ',{n:5,answer:'flight'},
+      ' attendants told us to ',{n:6,answer:'remain'},
+      ' in our seats until after we ',{n:7,answer:'took off'},
+      '. A few hours later, the ',{n:8,answer:'arrival'},
+      ' screen showed we were almost at our destination.',
+    ]
+  },
+  {
+    id:'p9', title:'Under the Sea',
+    words:['amount','area','bottom','deep','disappear','mystery','ocean','survive'],
+    segments:[
+      'Scientists study the ',{n:1,answer:'ocean'},
+      ' to learn about creatures that live far below the surface. The water becomes very ',{n:2,answer:'deep'},
+      ' very quickly, and the ',{n:3,answer:'amount'},
+      ' of sea life down there is incredible. Some fish live near the ',{n:4,answer:'bottom'},
+      ' of the sea where it is completely dark. Many of them ',{n:5,answer:'disappear'},
+      ' into the darkness and are almost impossible to find. The large ',{n:6,answer:'area'},
+      ' of the deep ocean is still a great ',{n:7,answer:'mystery'},
+      ' to scientists, because very few people have ever been able to ',{n:8,answer:'survived'},
+      ' a journey to those extreme depths.',
+    ]
+  },
+  {
+    id:'p10', title:'An Ordinary Hero',
+    words:['action','although','beat','fight','hero','impossible','ordinary','real'],
+    segments:[
+      'Most people think that a ',{n:1,answer:'hero'},
+      ' is someone who does something ',{n:2,answer:'impossible'},
+      ', like flying or lifting a car. But I believe that ',{n:3,answer:'real'},
+      ' heroes are just ',{n:4,answer:'ordinary'},
+      ' people who make brave choices every day. For example, my neighbour ran into a burning building to ',{n:5,answer:'fight'},
+      ' the flames and save a child inside. ',{n:6,answer:'although'},
+      ' he was very scared, he did not stop. His quick ',{n:7,answer:'action'},
+      ' helped ',{n:8,answer:'beat'},
+      ' the fire before it spread to other homes.',
+    ]
+  },
+  {
+    id:'p11', title:'The Science Fair',
+    words:['although','conversation','difficulty','effect','energy','manage','purpose','sort'],
+    segments:[
+      'Our class had to build a project for the school science fair. The ',{n:1,answer:'purpose'},
+      ' of the project was to show how sunlight produces ',{n:2,answer:'energy'},
+      '. We had a long ',{n:3,answer:'conversation'},
+      ' about which ',{n:4,answer:'sort'},
+      ' of experiment would be best. We had a lot of ',{n:5,answer:'difficulty'},
+      ' finding the right materials, but we did not give up. ',{n:6,answer:'although'},
+      ' we worked very hard, the ',{n:7,answer:'effect'},
+      ' of our solar panel was smaller than we expected. However, we did ',{n:8,answer:'manage'},
+      ' to finish on time and everyone was proud of the result.',
+    ]
+  },
+  {
+    id:'p12', title:'A Day at the Mall',
+    words:['at the moment','central','cool','credit card','flower','line','offer','useful'],
+    segments:[
+      'My mum and I went shopping at a big mall in the ',{n:1,answer:'central'},
+      ' part of the city. It was very hot outside, so it felt ',{n:2,answer:'cool'},
+      ' and comfortable inside. We waited in a long ',{n:3,answer:'line'},
+      ' to enter the most popular shop. The shopkeeper tried to ',{n:4,answer:'offer'},
+      ' us a discount on a beautiful bunch of ',{n:5,answer:'flower'},
+      's. My mum used her ',{n:6,answer:'credit card'},
+      ' to pay for everything. She said the map of the mall was very ',{n:7,answer:'useful'},
+      ' because we knew where we were going ',{n:8,answer:'at the moment'},
+      ' we walked in.',
+    ]
+  },
+  {
+    id:'p13', title:'Lost and Found',
+    words:['additional','area','control','island','peace','respond','sign','survive'],
+    segments:[
+      'During our boat trip, a sudden storm left us on a small ',{n:1,answer:'island'},
+      ' with very few supplies. We had to explore the ',{n:2,answer:'area'},
+      ' to find fresh water and food. Our captain tried to keep ',{n:3,answer:'control'},
+      ' of the situation and told everyone to stay calm. We found a ',{n:4,answer:'sign'},
+      ' near the trees that showed which direction the nearest village was. After sending a radio message, we waited for someone to ',{n:5,answer:'respond'},
+      '. We had to ',{n:6,answer:'survive'},
+      ' for three days before help finally arrived. There was a sense of ',{n:7,answer:'peace'},
+      ' when we finally saw the rescue boat coming towards us.',
+    ]
+  },
+  {
+    id:'p14', title:'Saving the Rainforest',
+    words:['action','although','Earth','effect','energy','in fact','purpose','sort'],
+    segments:[
+      'Our school decided to take ',{n:1,answer:'action'},
+      ' to help protect the environment. The ',{n:2,answer:'purpose'},
+      ' of our campaign was to teach people about how cutting down trees harms the ',{n:3,answer:'Earth'},
+      '. ',{n:4,answer:'in fact'},
+      ', scientists say that every tree gives us clean air and ',{n:5,answer:'energy'},
+      '. We made posters and gave talks about the bad ',{n:6,answer:'effect'},
+      ' of pollution. ',{n:7,answer:'although'},
+      ' some students were not interested at first, most people joined in after they understood the problem. It was a ',{n:8,answer:'sort'},
+      ' of lesson that stayed with everyone for a long time.',
+    ]
+  },
+  {
+    id:'p15', title:'The Emergency',
+    words:['admit','area','control','however','respond','sign','suddenly','survive'],
+    segments:[
+      'We were hiking in a forest when the weather changed very ',{n:1,answer:'suddenly'},
+      '. Dark clouds covered the whole ',{n:2,answer:'area'},
+      ' and it started raining heavily. We lost ',{n:3,answer:'control'},
+      ' of our map and had no idea where we were. I have to ',{n:4,answer:'admit'},
+      ' that I was very scared at that moment. ',{n:5,answer:'however'},
+      ', our group leader stayed calm and looked for a ',{n:6,answer:'sign'},
+      ' to help us find our way. We tried to call for help, but nobody could ',{n:7,answer:'respond'},
+      ' because there was no signal. In the end, we used our survival skills to ',{n:8,answer:'survive'},
+      ' the night safely in the forest.',
+    ]
+  },
+  {
+    id:'p16', title:'Summer Holidays',
+    words:['cool','country','flower','guy','have a good time','near','normally','vacation'],
+    segments:[
+      'Every summer, my family goes on a ',{n:1,answer:'vacation'},
+      ' to a small village in the north of the ',{n:2,answer:'country'},
+      '. We ',{n:3,answer:'normally'},
+      ' stay for two weeks in a house that is ',{n:4,answer:'near'},
+      ' a beautiful lake. The weather there is always ',{n:5,answer:'cool'},
+      ' and fresh, which is very different from the city. My sister loves to pick wild ',{n:6,answer:'flower'},
+      's from the fields near the house. Every evening, we sit outside and really ',{n:7,answer:'have a good time'},
+      ' together as a family. My dad always says that he is the luckiest ',{n:8,answer:'guy'},
+      ' in the world when we are all together.',
+    ]
+  },
+  {
+    id:'p17', title:'The Old Newspaper Story',
+    words:['although','death','deep','in fact','mystery','solve','story','wonder'],
+    segments:[
+      'I found an old newspaper in my grandfather\'s attic, and it had a very interesting ',{n:1,answer:'story'},
+      ' in it. The article was about a famous ',{n:2,answer:'mystery'},
+      ' from one hundred years ago. A ship had sunk in the ',{n:3,answer:'deep'},
+      ' waters of the sea, and nobody knew why. ',{n:4,answer:'although'},
+      ' many people tried to investigate, nobody could ',{n:5,answer:'solve'},
+      ' the case. ',{n:6,answer:'in fact'},
+      ', the ',{n:7,answer:'death'},
+      ' of all the sailors was never fully explained. I could not stop reading, and I started to ',{n:8,answer:'wonder'},
+      ' whether the truth would ever come out.',
+    ]
+  },
+  {
+    id:'p18', title:'Road Trip with the Family',
+    words:['adventure','although','arrival','conversation','country','have a good time','insist','normally'],
+    segments:[
+      'Last spring, my family drove across the ',{n:1,answer:'country'},
+      ' on a long road trip. My dad said it would be a real ',{n:2,answer:'adventure'},
+      ' and he was completely right. ',{n:3,answer:'although'},
+      ' it was a very long drive, we ',{n:4,answer:'have a good time'},
+      ' the whole way. We had a great ',{n:5,answer:'conversation'},
+      ' about our favourite places we had ever visited. My mum would ',{n:6,answer:'insist'},
+      ' on stopping at every interesting village we passed. ',{n:7,answer:'normally'},
+      ', we would stop about three times a day for food and photos. Our ',{n:8,answer:'arrival'},
+      ' at the final destination felt like a real celebration.',
+    ]
+  },
+  {
+    id:'p19', title:'The Strange Signal',
+    words:['additional','area','control','definitely','disappear','however','respond','wonder'],
+    segments:[
+      'One night, our neighbours reported seeing strange lights in the ',{n:1,answer:'area'},
+      ' above our town. ',{n:2,answer:'however'},
+      ', when the police came to investigate, the lights had already ',{n:3,answer:'disappeared'},
+      '. The police tried to ',{n:4,answer:'respond'},
+      ' to every call they received, but they could not find any explanation. Scientists said there was ',{n:5,answer:'definitely'},
+      ' something unusual happening in the sky. They sent ',{n:6,answer:'additional'},
+      ' equipment to track the signals, but they could not keep ',{n:7,answer:'control'},
+      ' of the data. To this day, people still ',{n:8,answer:'wonder'},
+      ' what the lights were and whether they will ever come back.',
+    ]
+  },
+  {
+    id:'p20', title:'A Walk in the Mountains',
+    words:['additional','although','deep','flower','near','peace','wonder','amount'],
+    segments:[
+      'Last weekend, my family went for a long walk in the mountains. We walked through a ',{n:1,answer:'deep'},
+      ' valley filled with wild ',{n:2,answer:'flower'},
+      's of every colour. The trail took us ',{n:3,answer:'near'},
+      ' a waterfall that was absolutely beautiful. ',{n:4,answer:'although'},
+      ' the path was quite difficult, nobody wanted to stop. The ',{n:5,answer:'amount'},
+      ' of nature around us was breathtaking. There was a real feeling of ',{n:6,answer:'peace'},
+      ' in the air, far away from the noise of the city. At the top of the hill, we found an ',{n:7,answer:'additional'},
+      ' viewpoint that we did not expect. I could not help but ',{n:8,answer:'wonder'},
+      ' how something this beautiful existed so close to where we live.',
+    ]
+  },
+  {
+    id:'p21', title:'Never Give Up',
+    words:['(be) able to','admit','although','difficulty','impossible','manage','purpose','real'],
+    segments:[
+      'My cousin always wanted to become a professional swimmer, but everyone told her it was ',{n:1,answer:'impossible'},
+      '. She had to ',{n:2,answer:'admit'},
+      ' that training was very hard and she had many moments of ',{n:3,answer:'difficulty'},
+      '. Her ',{n:4,answer:'purpose'},
+      ' was clear – she wanted to compete at a national level. ',{n:5,answer:'although'},
+      ' there were days when she wanted to quit, she kept going. After two years of hard work, she was finally ',{n:6,answer:'(be) able to'},
+      ' swim faster than any other girl in the country. She ',{n:7,answer:'managed'},
+      ' to win the gold medal and proved that with hard work, ',{n:8,answer:'real'},
+      ' dreams can come true.',
+    ]
+  },
+  {
+    id:'p22', title:'Alone on the Island',
+    words:['amount','bottom','could','deep','island','ocean','peace','survive'],
+    segments:[
+      'In the book I read, a young boy found himself alone on a small ',{n:1,answer:'island'},
+      ' in the middle of the ',{n:2,answer:'ocean'},
+      '. He had to think carefully about how to ',{n:3,answer:'survive'},
+      ' with a very small ',{n:4,answer:'amount'},
+      ' of food and water. The sea around the island was very ',{n:5,answer:'deep'},
+      ', and he ',{n:6,answer:'could'},
+      ' see colourful fish swimming near the ',{n:7,answer:'bottom'},
+      ' through the clear water. Despite being alone, he slowly found a kind of ',{n:8,answer:'peace'},
+      ' and began to enjoy the quiet beauty of nature around him.',
+    ]
+  },
+  {
+    id:'p23', title:'The Ancient Discovery',
+    words:['additional','area','in fact','mystery','solve','story','throughout','wonder'],
+    segments:[
+      'Archaeologists recently discovered an ancient city in a desert ',{n:1,answer:'area'},
+      ' that nobody had explored before. The ',{n:2,answer:'story'},
+      ' of this discovery was reported all over the world. ',{n:3,answer:'throughout'},
+      ' history, people had believed that a great civilisation existed there, but nobody could prove it. ',{n:4,answer:'in fact'},
+      ', the city had been hidden under the sand for over two thousand years. Researchers found ',{n:5,answer:'additional'},
+      ' buildings and objects each day, making the site bigger and bigger. The biggest ',{n:6,answer:'mystery'},
+      ' was why the people had left so suddenly. Scientists worked hard to ',{n:7,answer:'solve'},
+      ' this question, and the world could only ',{n:8,answer:'wonder'},
+      ' what secrets were still buried beneath the ground.',
+    ]
+  },
+  {
+    id:'p24', title:'First Day at a New School',
+    words:['although','arrival','conversation','insist','offer','opinion','sort','useful'],
+    segments:[
+      'Moving to a new city meant starting at a completely new school. On the morning of my ',{n:1,answer:'arrival'},
+      ', I felt very nervous about meeting new people. ',{n:2,answer:'although'},
+      ' I am usually quite shy, I tried to smile and look friendly. A girl named Noa sat next to me and started a ',{n:3,answer:'conversation'},
+      ' about our homework. She gave me her ',{n:4,answer:'opinion'},
+      ' on which teacher was the most interesting and which ',{n:5,answer:'sort'},
+      ' of activities I would enjoy. She also gave me a map of the school, which was very ',{n:6,answer:'useful'},
+      '. She would ',{n:7,answer:'insist'},
+      ' on walking me to every class for the first week. When she started to ',{n:8,answer:'offer'},
+      ' to share her lunch with me, I knew that I had found a real friend.',
+    ]
+  },
+];
+
+// ══════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════
+let currentIdx = 0;
+let activeChip = null;
+
+function navigate(dir) {
+  const newIdx = currentIdx + dir;
+  if (newIdx < 0 || newIdx >= PASSAGES.length) return;
+  clearActiveChip();
+  document.getElementById(`card_${PASSAGES[currentIdx].id}`).classList.remove('active');
+  currentIdx = newIdx;
+  document.getElementById(`card_${PASSAGES[currentIdx].id}`).classList.add('active');
+  updateNavUI();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateNavUI() {
+  const p = PASSAGES[currentIdx];
+  document.getElementById('nav-label').textContent = `Text ${currentIdx + 1} / ${PASSAGES.length}`;
+  document.getElementById('nav-title').textContent = p.title;
+  document.getElementById('btn-prev').disabled = currentIdx === 0;
+  document.getElementById('btn-next').disabled = currentIdx === PASSAGES.length - 1;
+}
+
+// ══════════════════════════════════════════════════════
+//  BUILD VOCAB
+// ══════════════════════════════════════════════════════
+function buildVocab() {
+  const container = document.getElementById('vocab-container');
+
+  PASSAGES.forEach((p, idx) => {
+    const blanksCount = p.segments.filter(s => typeof s === 'object').length;
+    const card = document.createElement('div');
+    card.className = 'card vocab-card' + (idx === 0 ? ' active' : '');
+    card.id = `card_${p.id}`;
+
+    // hint bar
+    const hintBar = document.createElement('div');
+    hintBar.className = 'hint-bar';
+    hintBar.id = `hint_${p.id}`;
+    hintBar.textContent = 'לחץ על מילה מהרשימה ואז על הקו המתאים';
+    card.appendChild(hintBar);
+
+    // word bank
+    const bank = document.createElement('div');
+    bank.className = 'word-bank';
+    p.words.forEach(word => {
+      const chip = document.createElement('span');
+      chip.className = 'word-chip';
+      chip.textContent = word;
+      chip.dataset.word = word;
+      chip.dataset.pid = p.id;
+      chip.draggable = true;
+      chip.addEventListener('click', () => onChipClick(chip));
+      chip.addEventListener('dragstart', e => {
+        if (chip.classList.contains('used')) { e.preventDefault(); return; }
+        e.dataTransfer.setData('word', word);
+        e.dataTransfer.setData('pid', p.id);
+        chip.classList.add('dragging');
+        clearActiveChip();
+      });
+      chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+      bank.appendChild(chip);
+    });
+    card.appendChild(bank);
+
+    // passage
+    const passage = document.createElement('p');
+    passage.className = 'passage';
+    p.segments.forEach(seg => {
+      if (typeof seg === 'string') {
+        passage.appendChild(document.createTextNode(seg));
+      } else {
+        const zone = document.createElement('span');
+        zone.className = 'drop-zone';
+        zone.id = `${p.id}_${seg.n}`;
+        zone.dataset.answer = seg.answer.toLowerCase();
+        zone.dataset.pid = p.id;
+        zone.dataset.label = `(${seg.n})`;
+        zone.textContent = `(${seg.n})`;
+        zone.addEventListener('click', () => onZoneClick(zone));
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', e => {
+          e.preventDefault();
+          zone.classList.remove('drag-over');
+          if (e.dataTransfer.getData('pid') === p.id) placeWord(zone, e.dataTransfer.getData('word'), p.id);
+        });
+        passage.appendChild(zone);
+      }
+    });
+    card.appendChild(passage);
+
+    // buttons
+    const btnRow = document.createElement('div');
+    btnRow.className = 'btn-row';
+    btnRow.innerHTML = `
+      <button class="btn btn-primary" onclick="checkPassage('${p.id}',${blanksCount})">Check ✓</button>
+      <button class="btn btn-secondary" onclick="resetPassage('${p.id}')">Reset</button>
+    `;
+    card.appendChild(btnRow);
+    const scoreEl = document.createElement('div');
+    scoreEl.id = `score_${p.id}`;
+    card.appendChild(scoreEl);
+
+    container.appendChild(card);
+  });
+
+  updateNavUI();
+}
+
+// ── Tap interaction ────────────────────────────────────
+function onChipClick(chip) {
+  if (chip.classList.contains('used')) return;
+  if (activeChip === chip) { clearActiveChip(); return; }
+  clearActiveChip();
+  activeChip = chip;
+  chip.classList.add('selected');
+  document.querySelectorAll(`.drop-zone[data-pid="${chip.dataset.pid}"]`).forEach(z => {
+    if (!z.dataset.placed) z.classList.add('hint-target');
+  });
+  const hintBar = document.getElementById(`hint_${chip.dataset.pid}`);
+  if (hintBar) { hintBar.textContent = `"${chip.dataset.word}" נבחר — לחץ על הקו כדי למקם`; hintBar.classList.add('active'); }
+}
+
+function onZoneClick(zone) {
+  if (activeChip && activeChip.dataset.pid === zone.dataset.pid) {
+    placeWord(zone, activeChip.dataset.word, zone.dataset.pid);
+    clearActiveChip();
+  } else if (!activeChip && zone.dataset.placed) {
+    returnWord(zone);
+  }
+}
+
+function clearActiveChip() {
+  if (!activeChip) return;
+  activeChip.classList.remove('selected');
+  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('hint-target'));
+  const hintBar = document.getElementById(`hint_${activeChip.dataset.pid}`);
+  if (hintBar) { hintBar.textContent = 'לחץ על מילה מהרשימה ואז על הקו המתאים'; hintBar.classList.remove('active'); }
+  activeChip = null;
+}
+
+document.addEventListener('click', e => {
+  if (activeChip && !e.target.classList.contains('word-chip') && !e.target.classList.contains('drop-zone'))
+    clearActiveChip();
+});
+
+function placeWord(zone, word, pid) {
+  if (zone.dataset.placed) returnWord(zone);
+  zone.textContent = word;
+  zone.dataset.placed = word;
+  zone.classList.add('filled');
+  zone.classList.remove('correct', 'wrong', 'hint-target');
+  const chip = document.querySelector(`.word-chip[data-pid="${pid}"][data-word="${word}"]`);
+  if (chip) chip.classList.add('used');
+}
+
+function returnWord(zone) {
+  const word = zone.dataset.placed;
+  if (!word) return;
+  const chip = document.querySelector(`.word-chip[data-pid="${zone.dataset.pid}"][data-word="${word}"]`);
+  if (chip) chip.classList.remove('used');
+  zone.textContent = zone.dataset.label;
+  delete zone.dataset.placed;
+  zone.classList.remove('filled', 'correct', 'wrong');
+}
+
+function checkPassage(pid, count) {
+  let correct = 0, filled = 0;
+  for (let n = 1; n <= count; n++) {
+    const zone = document.getElementById(`${pid}_${n}`);
+    if (!zone) continue;
+    zone.classList.remove('correct', 'wrong');
+    if (!zone.dataset.placed) continue;
+    filled++;
+    const placed = zone.dataset.placed.toLowerCase().replace(/ed$/, '');
+    const ans    = zone.dataset.answer.toLowerCase().replace(/ed$/, '');
+    if (placed === ans) { zone.classList.add('correct'); correct++; }
+    else                { zone.classList.add('wrong'); }
+  }
+  const el = document.getElementById(`score_${pid}`);
+  if (!filled) { el.innerHTML = ''; return; }
+  const pct = Math.round(correct / count * 100);
+  const cls = pct === 100 ? 'good' : pct >= 60 ? 'ok' : 'bad';
+  el.innerHTML = `<span class="score-badge ${cls}">${correct}/${count} correct (${pct}%)</span>`;
+}
+
+function resetPassage(pid) {
+  const p = PASSAGES.find(x => x.id === pid);
+  if (!p) return;
+  const count = p.segments.filter(s => typeof s === 'object').length;
+  for (let n = 1; n <= count; n++) {
+    const zone = document.getElementById(`${pid}_${n}`);
+    if (zone && zone.dataset.placed) returnWord(zone);
+    if (zone) zone.classList.remove('correct', 'wrong');
+  }
+  document.getElementById(`score_${pid}`).innerHTML = '';
+  clearActiveChip();
+}
+
+// ══════════════════════════════════════════════════════
+//  GRAMMAR  (200 questions, 5 per page)
+// ══════════════════════════════════════════════════════
+const GRAM = [
+  // ── Affirmative – irregular ──────────────────────────
+  {q:'Sarah ___ (tell) me a secret last week.',                                   hint:'told',           he:'סיפרה'},
+  {q:'We ___ (have) a great time at the party last night.',                       hint:'had',            he:'היה לנו'},
+  {q:'They ___ (buy) a new car last month.',                                      hint:'bought',         he:'קנו'},
+  {q:'He ___ (run) very fast in the school race.',                                hint:'ran',            he:'רץ'},
+  {q:'She ___ (write) a beautiful poem for the class.',                           hint:'wrote',          he:'כתבה'},
+  {q:'The children ___ (eat) all the cookies on the table.',                      hint:'ate',            he:'אכלו'},
+  {q:'My dad ___ (drive) us to school this morning.',                             hint:'drove',          he:'נהג'},
+  {q:'I ___ (see) a great film last night.',                                      hint:'saw',            he:'ראיתי'},
+  {q:'Tom ___ (come) to my house after school yesterday.',                        hint:'came',           he:'בא'},
+  {q:'We ___ (go) to the beach last summer.',                                     hint:'went',           he:'הלכנו'},
+  {q:'She ___ (think) the answer was correct.',                                   hint:'thought',        he:'חשבה'},
+  {q:'He ___ (give) me his old football.',                                        hint:'gave',           he:'נתן'},
+  {q:'The teacher ___ (teach) us a new grammar rule.',                            hint:'taught',         he:'לימד'},
+  {q:'They ___ (find) a lost dog in the park.',                                   hint:'found',          he:'מצאו'},
+  {q:'I ___ (take) the bus to school this morning.',                              hint:'took',           he:'לקחתי'},
+  {q:'She ___ (make) a delicious chocolate cake.',                                hint:'made',           he:'הכינה'},
+  {q:'My mum ___ (feel) very tired after a long day at work.',                   hint:'felt',           he:'הרגישה'},
+  {q:'Our team ___ (win) the match on Saturday.',                                 hint:'won',            he:'ניצחה'},
+  {q:'He ___ (lose) his phone on the way home.',                                  hint:'lost',           he:'איבד'},
+  {q:'They ___ (speak) to the principal about the problem.',                      hint:'spoke',          he:'דיברו'},
+  {q:'I ___ (forget) to bring my homework today.',                                hint:'forgot',         he:'שכחתי'},
+  {q:'She ___ (know) the answer before anyone else.',                             hint:'knew',           he:'ידעה'},
+  {q:'The bird ___ (fly) away when I got too close.',                             hint:'flew',           he:'עף'},
+  {q:'We ___ (meet) our new neighbours for the first time.',                      hint:'met',            he:'פגשנו'},
+  {q:'He ___ (send) me a message last night.',                                    hint:'sent',           he:'שלח'},
+  {q:'They ___ (build) a new house near the school.',                             hint:'built',          he:'בנו'},
+  {q:'I ___ (break) my favourite cup by accident.',                               hint:'broke',          he:'שברתי'},
+  {q:'She ___ (catch) the ball before it hit the ground.',                        hint:'caught',         he:'תפסה'},
+  {q:'The team ___ (beat) the other school in the final game.',                   hint:'beat',           he:'ניצחה'},
+  {q:'My friend ___ (leave) the party early last night.',                         hint:'left',           he:'עזב'},
+  {q:'We ___ (spend) the whole weekend at the beach.',                            hint:'spent',          he:'בילינו'},
+  {q:'He ___ (stand) up and walked to the board.',                                hint:'stood',          he:'עמד'},
+  {q:'They ___ (sleep) for twelve hours after the long trip.',                    hint:'slept',          he:'ישנו'},
+  {q:'I ___ (wake) up very early to watch the sunrise.',                          hint:'woke',           he:'התעוררתי'},
+  {q:'She ___ (ride) her bike to the park yesterday.',                            hint:'rode',           he:'רכבה'},
+  {q:'The students ___ (sit) quietly during the test.',                           hint:'sat',            he:'ישבו'},
+  {q:'We ___ (choose) the best pizza at the restaurant.',                         hint:'chose',          he:'בחרנו'},
+  {q:'He ___ (pay) for everyone\'s ice cream.',                                   hint:'paid',           he:'שילם'},
+  {q:'They ___ (hear) a loud noise in the middle of the night.',                  hint:'heard',          he:'שמעו'},
+  {q:'She ___ (understand) the question straight away.',                          hint:'understood',     he:'הבינה'},
+  // ── Affirmative – regular ────────────────────────────
+  {q:'She ___ (visit) her grandmother last Sunday.',                              hint:'visited',        he:'ביקרה'},
+  {q:'They ___ (finish) the project just in time.',                               hint:'finished',       he:'סיימו'},
+  {q:'We ___ (clean) the whole house before our guests arrived.',                 hint:'cleaned',        he:'ניקינו'},
+  {q:'He ___ (cook) pasta for dinner last night.',                                hint:'cooked',         he:'בישל'},
+  {q:'I ___ (play) football with my friends after school.',                       hint:'played',         he:'שיחקתי'},
+  {q:'She ___ (study) for three hours before the test.',                          hint:'studied',        he:'למדה'},
+  {q:'The children ___ (watch) a cartoon before bed.',                            hint:'watched',        he:'צפו'},
+  {q:'My dad ___ (help) me with my homework yesterday.',                          hint:'helped',         he:'עזר'},
+  {q:'We ___ (open) the presents on my birthday morning.',                        hint:'opened',         he:'פתחנו'},
+  {q:'He ___ (start) a new book last week.',                                      hint:'started',        he:'התחיל'},
+  {q:'They ___ (stop) the car near the park.',                                    hint:'stopped',        he:'עצרו'},
+  {q:'I ___ (wait) for the bus for twenty minutes.',                              hint:'waited',         he:'חיכיתי'},
+  {q:'She ___ (work) very hard on her drawing.',                                  hint:'worked',         he:'עבדה'},
+  {q:'We ___ (listen) to the teacher\'s instructions carefully.',                 hint:'listened',       he:'הקשבנו'},
+  {q:'He ___ (call) his mum from school.',                                        hint:'called',         he:'התקשר'},
+  {q:'They ___ (dance) at the school party all night.',                           hint:'danced',         he:'רקדו'},
+  {q:'I ___ (use) a new app to practise my English.',                             hint:'used',           he:'השתמשתי'},
+  {q:'She ___ (love) the new book she got for her birthday.',                     hint:'loved',          he:'אהבה'},
+  {q:'We ___ (try) a new restaurant in the city centre.',                         hint:'tried',          he:'ניסינו'},
+  {q:'He ___ (carry) all the shopping bags by himself.',                          hint:'carried',        he:'נשא'},
+  // ── Negative – irregular ─────────────────────────────
+  {q:'My dad ___ (not / go) to work last Friday.',                                hint:"didn't go",      he:'לא הלך'},
+  {q:'She ___ (not / come) to school yesterday.',                                 hint:"didn't come",    he:'לא באה'},
+  {q:'They ___ (not / see) the film because it was too scary.',                   hint:"didn't see",     he:'לא ראו'},
+  {q:'I ___ (not / know) the answer to the last question.',                       hint:"didn't know",    he:'לא ידעתי'},
+  {q:'He ___ (not / eat) breakfast because he was late.',                         hint:"didn't eat",     he:'לא אכל'},
+  {q:'We ___ (not / have) enough time to finish the test.',                       hint:"didn't have",    he:'לא היה לנו'},
+  {q:'She ___ (not / make) her bed this morning.',                                hint:"didn't make",    he:'לא הכינה'},
+  {q:'They ___ (not / find) their seats quickly.',                                hint:"didn't find",    he:'לא מצאו'},
+  {q:'I ___ (not / take) my jacket because it was warm.',                         hint:"didn't take",    he:'לא לקחתי'},
+  {q:'He ___ (not / buy) anything at the market.',                                hint:"didn't buy",     he:'לא קנה'},
+  {q:'We ___ (not / win) the last match of the season.',                          hint:"didn't win",     he:'לא ניצחנו'},
+  {q:'She ___ (not / write) in her diary last night.',                            hint:"didn't write",   he:'לא כתבה'},
+  {q:'They ___ (not / think) the plan was a good idea.',                          hint:"didn't think",   he:'לא חשבו'},
+  {q:'I ___ (not / feel) well enough to go to school.',                           hint:"didn't feel",    he:'לא הרגשתי'},
+  {q:'He ___ (not / run) in the race because of his injury.',                     hint:"didn't run",     he:'לא רץ'},
+  {q:'We ___ (not / speak) to each other after the argument.',                    hint:"didn't speak",   he:'לא דיברנו'},
+  {q:'She ___ (not / tell) anyone about what she saw.',                           hint:"didn't tell",    he:'לא סיפרה'},
+  {q:'They ___ (not / give) us enough time to answer.',                           hint:"didn't give",    he:'לא נתנו'},
+  {q:'I ___ (not / forget) to turn off the lights.',                              hint:"didn't forget",  he:'לא שכחתי'},
+  {q:'He ___ (not / leave) a note before he went out.',                           hint:"didn't leave",   he:'לא השאיר'},
+  {q:'We ___ (not / meet) the new student on the first day.',                     hint:"didn't meet",    he:'לא פגשנו'},
+  {q:'She ___ (not / send) the email in time.',                                   hint:"didn't send",    he:'לא שלחה'},
+  {q:'They ___ (not / break) any rules during the trip.',                         hint:"didn't break",   he:'לא שברו'},
+  {q:'I ___ (not / drive) because of the traffic.',                               hint:"didn't drive",   he:'לא נהגתי'},
+  {q:'He ___ (not / sleep) well the night before the exam.',                      hint:"didn't sleep",   he:'לא ישן'},
+  {q:'We ___ (not / build) the sandcastle before the tide came in.',              hint:"didn't build",   he:'לא בנינו'},
+  {q:'She ___ (not / catch) the bus on time this morning.',                       hint:"didn't catch",   he:'לא תפסה'},
+  {q:'They ___ (not / pay) the correct amount.',                                  hint:"didn't pay",     he:'לא שילמו'},
+  {q:'I ___ (not / understand) what the teacher explained.',                      hint:"didn't understand", he:'לא הבנתי'},
+  {q:'He ___ (not / ride) his bike in the rain.',                                 hint:"didn't ride",    he:'לא רכב'},
+  // ── Negative – regular ──────────────────────────────
+  {q:'She ___ (not / finish) her meal at the restaurant.',                        hint:"didn't finish",  he:'לא סיימה'},
+  {q:'They ___ (not / clean) their room before the guests came.',                 hint:"didn't clean",   he:'לא ניקו'},
+  {q:'We ___ (not / play) outside because of the rain.',                          hint:"didn't play",    he:'לא שיחקנו'},
+  {q:'He ___ (not / study) for the test and failed.',                             hint:"didn't study",   he:'לא למד'},
+  {q:'I ___ (not / watch) the match because I was busy.',                         hint:"didn't watch",   he:'לא צפיתי'},
+  {q:'She ___ (not / help) with the cooking last night.',                         hint:"didn't help",    he:'לא עזרה'},
+  {q:'They ___ (not / open) the windows because it was cold.',                    hint:"didn't open",    he:'לא פתחו'},
+  {q:'We ___ (not / start) the film without you.',                                hint:"didn't start",   he:'לא התחלנו'},
+  {q:'He ___ (not / stop) to say goodbye before leaving.',                        hint:"didn't stop",    he:'לא עצר'},
+  {q:'I ___ (not / wait) more than ten minutes for the bus.',                     hint:"didn't wait",    he:'לא חיכיתי'},
+  {q:'She ___ (not / work) on Saturdays.',                                        hint:"didn't work",    he:'לא עבדה'},
+  {q:'They ___ (not / listen) to the instructions carefully.',                    hint:"didn't listen",  he:'לא הקשיבו'},
+  {q:'We ___ (not / call) the restaurant to book a table.',                       hint:"didn't call",    he:'לא התקשרנו'},
+  {q:'He ___ (not / dance) at the party because he was shy.',                     hint:"didn't dance",   he:'לא רקד'},
+  {q:'I ___ (not / use) the computer all day.',                                   hint:"didn't use",     he:'לא השתמשתי'},
+  {q:'She ___ (not / try) the new food on the menu.',                             hint:"didn't try",     he:'לא ניסתה'},
+  {q:'They ___ (not / visit) us during the school holidays.',                     hint:"didn't visit",   he:'לא ביקרו'},
+  {q:'We ___ (not / cook) at home last night.',                                   hint:"didn't cook",    he:'לא בישלנו'},
+  {q:'He ___ (not / carry) his heavy bag all the way home.',                      hint:"didn't carry",   he:'לא נשא'},
+  {q:'I ___ (not / enjoy) the concert very much.',                                hint:"didn't enjoy",   he:'לא נהניתי'},
+  // ── Questions – irregular ────────────────────────────
+  {q:'___ (you / see) anything interesting at the museum?',                       hint:'Did you see',    he:'ראית?'},
+  {q:'___ (she / come) to your party last week?',                                 hint:'Did she come',   he:'באה?'},
+  {q:'___ (they / go) abroad for the holidays?',                                  hint:'Did they go',    he:'הלכו?'},
+  {q:'___ (he / find) his lost bag at school?',                                   hint:'Did he find',    he:'מצא?'},
+  {q:'___ (the team / win) the championship this year?',                          hint:'Did the team win', he:'ניצחה?'},
+  {q:'___ (you / eat) before you came here?',                                     hint:'Did you eat',    he:'אכלת?'},
+  {q:'___ (she / write) the report by herself?',                                  hint:'Did she write',  he:'כתבה?'},
+  {q:'___ (they / make) a plan before the trip?',                                 hint:'Did they make',  he:'הכינו?'},
+  {q:'___ (he / have) enough money for the ticket?',                              hint:'Did he have',    he:'היה לו?'},
+  {q:'___ (you / take) the umbrella with you?',                                   hint:'Did you take',   he:'לקחת?'},
+  {q:'___ (she / think) the test was difficult?',                                 hint:'Did she think',  he:'חשבה?'},
+  {q:'___ (they / buy) presents for everyone?',                                   hint:'Did they buy',   he:'קנו?'},
+  {q:'___ (he / run) in the school race this year?',                              hint:'Did he run',     he:'רץ?'},
+  {q:'___ (you / know) the answer to question five?',                             hint:'Did you know',   he:'ידעת?'},
+  {q:'___ (she / tell) you what happened?',                                       hint:'Did she tell',   he:'סיפרה?'},
+  {q:'___ (they / give) you any homework today?',                                 hint:'Did they give',  he:'נתנו?'},
+  {q:'___ (he / feel) better after taking the medicine?',                         hint:'Did he feel',    he:'הרגיש?'},
+  {q:'___ (you / meet) anyone new at the party?',                                 hint:'Did you meet',   he:'פגשת?'},
+  {q:'___ (she / send) you a message last night?',                                hint:'Did she send',   he:'שלחה?'},
+  {q:'___ (they / break) any records in the competition?',                        hint:'Did they break', he:'שברו?'},
+  {q:'___ (he / drive) to the airport by himself?',                               hint:'Did he drive',   he:'נהג?'},
+  {q:'___ (you / sleep) well before the big exam?',                               hint:'Did you sleep',  he:'ישנת?'},
+  {q:'___ (she / build) the model by herself?',                                   hint:'Did she build',  he:'בנתה?'},
+  {q:'___ (they / catch) the last train home?',                                   hint:'Did they catch', he:'תפסו?'},
+  {q:'___ (he / pay) for the meal at the restaurant?',                            hint:'Did he pay',     he:'שילם?'},
+  {q:'___ (you / understand) the teacher\'s explanation?',                        hint:'Did you understand', he:'הבנת?'},
+  {q:'___ (she / ride) her bike to school today?',                                hint:'Did she ride',   he:'רכבה?'},
+  {q:'___ (they / speak) to the head teacher?',                                   hint:'Did they speak', he:'דיברו?'},
+  {q:'___ (he / leave) before the end of the lesson?',                            hint:'Did he leave',   he:'עזב?'},
+  {q:'___ (you / hear) the news this morning?',                                   hint:'Did you hear',   he:'שמעת?'},
+  // ── Questions – regular ──────────────────────────────
+  {q:'___ (you / finish) all the exercises in the workbook?',                     hint:'Did you finish', he:'סיימת?'},
+  {q:'___ (she / clean) her room before going out?',                              hint:'Did she clean',  he:'ניקתה?'},
+  {q:'___ (they / play) well in the match?',                                      hint:'Did they play',  he:'שיחקו?'},
+  {q:'___ (he / study) hard for the final exam?',                                 hint:'Did he study',   he:'למד?'},
+  {q:'___ (you / watch) the new series last night?',                              hint:'Did you watch',  he:'צפית?'},
+  {q:'___ (she / help) her brother with his project?',                            hint:'Did she help',   he:'עזרה?'},
+  {q:'___ (they / open) a new shop in town?',                                     hint:'Did they open',  he:'פתחו?'},
+  {q:'___ (he / start) his homework right after school?',                         hint:'Did he start',   he:'התחיל?'},
+  {q:'___ (you / stop) at the petrol station on the way?',                        hint:'Did you stop',   he:'עצרת?'},
+  {q:'___ (she / wait) long for the bus this morning?',                           hint:'Did she wait',   he:'חיכתה?'},
+  {q:'___ (they / work) on the project all weekend?',                             hint:'Did they work',  he:'עבדו?'},
+  {q:'___ (he / listen) to the podcast you recommended?',                         hint:'Did he listen',  he:'הקשיב?'},
+  {q:'___ (you / call) the doctor about your appointment?',                       hint:'Did you call',   he:'התקשרת?'},
+  {q:'___ (she / dance) at the school show?',                                     hint:'Did she dance',  he:'רקדה?'},
+  {q:'___ (they / use) a map to find their way?',                                 hint:'Did they use',   he:'השתמשו?'},
+  {q:'___ (he / try) the vegetarian option on the menu?',                         hint:'Did he try',     he:'ניסה?'},
+  {q:'___ (you / visit) the science museum on the trip?',                         hint:'Did you visit',  he:'ביקרת?'},
+  {q:'___ (she / cook) anything special for the party?',                          hint:'Did she cook',   he:'בישלה?'},
+  {q:'___ (they / carry) all the equipment themselves?',                           hint:'Did they carry', he:'נשאו?'},
+  {q:'___ (he / enjoy) the trip to the zoo?',                                     hint:'Did he enjoy',   he:'נהנה?'},
+  // ── Mixed ────────────────────────────────────────────
+  {q:'My sister ___ (not / finish) the book she borrowed from me.',               hint:"didn't finish",  he:'לא סיימה'},
+  {q:'___ (the boys / play) in the park after school?',                           hint:'Did the boys play', he:'שיחקו?'},
+  {q:'The teacher ___ (explain) the grammar rule very clearly.',                  hint:'explained',      he:'הסביר'},
+  {q:'I ___ (not / understand) the last part of the lesson.',                     hint:"didn't understand", he:'לא הבנתי'},
+  {q:'___ (she / enjoy) the school trip last week?',                              hint:'Did she enjoy',  he:'נהנתה?'},
+  {q:'My parents ___ (visit) my grandparents last Friday.',                       hint:'visited',        he:'ביקרו'},
+  {q:'He ___ (not / remember) to return the library book.',                       hint:"didn't remember", he:'לא זכר'},
+  {q:'___ (you / bring) your sports kit to school today?',                        hint:'Did you bring',  he:'הבאת?'},
+  {q:'The baby ___ (sleep) through the whole night.',                             hint:'slept',          he:'ישן'},
+  {q:'We ___ (not / arrive) in time for the beginning of the show.',              hint:"didn't arrive",  he:'לא הגענו'},
+  {q:'___ (they / travel) to another country last year?',                         hint:'Did they travel', he:'נסעו?'},
+  {q:'She ___ (lose) her glasses somewhere in the classroom.',                    hint:'lost',           he:'איבדה'},
+  {q:'I ___ (not / wake) up early enough to catch the bus.',                      hint:"didn't wake",    he:'לא התעוררתי'},
+  {q:'___ (he / swim) in the final heat of the competition?',                     hint:'Did he swim',    he:'שחה?'},
+  {q:'They ___ (not / return) the books to the library on time.',                 hint:"didn't return",  he:'לא החזירו'},
+  {q:'My friend ___ (bring) me a gift from her holiday.',                         hint:'brought',        he:'הביאה'},
+  {q:'___ (you / enjoy) the birthday party last night?',                          hint:'Did you enjoy',  he:'נהנית?'},
+  {q:'He ___ (not / pass) the driving test on his first try.',                    hint:"didn't pass",    he:'לא עבר'},
+  {q:'She ___ (win) first place in the singing competition.',                     hint:'won',            he:'ניצחה'},
+  {q:'___ (they / choose) the same answer as you?',                               hint:'Did they choose', he:'בחרו?'},
+  {q:'I ___ (not / sleep) well because of the heat last night.',                  hint:"didn't sleep",   he:'לא ישנתי'},
+  {q:'We ___ (take) lots of photos during the school trip.',                      hint:'took',           he:'צילמנו'},
+  {q:'___ (she / forget) to bring her pencil case?',                              hint:'Did she forget', he:'שכחה?'},
+  {q:'He ___ (not / speak) to the teacher about the problem.',                    hint:"didn't speak",   he:'לא דיבר'},
+  {q:'The children ___ (sit) quietly while the teacher was reading.',             hint:'sat',            he:'ישבו'},
+  {q:'___ (you / read) the whole chapter for homework?',                          hint:'Did you read',   he:'קראת?'},
+  {q:'My mum ___ (make) a delicious cake for my birthday.',                       hint:'made',           he:'הכינה'},
+  {q:'I ___ (not / bring) enough money for lunch today.',                         hint:"didn't bring",   he:'לא הבאתי'},
+  {q:'___ (he / stand) up and introduce himself to the class?',                   hint:'Did he stand',   he:'עמד?'},
+  {q:'They ___ (spend) the whole day at the water park.',                         hint:'spent',          he:'בילו'},
+  {q:'___ (she / find) the book she was looking for?',                            hint:'Did she find',   he:'מצאה?'},
+  {q:'We ___ (not / get) enough sleep before the early flight.',                  hint:"didn't get",     he:'לא ישנו'},
+  {q:'The cat ___ (jump) onto the table and knocked over the glass.',             hint:'jumped',         he:'קפץ'},
+  {q:'___ (you / feel) nervous before your class presentation?',                  hint:'Did you feel',   he:'הרגשת?'},
+  {q:'He ___ (not / eat) his vegetables at dinner.',                              hint:"didn't eat",     he:'לא אכל'},
+  {q:'She ___ (draw) a beautiful picture of the sunset.',                         hint:'drew',           he:'ציירה'},
+  {q:'___ (they / arrive) at the hotel before dark?',                             hint:'Did they arrive', he:'הגיעו?'},
+  {q:'I ___ (not / see) him at school for the whole week.',                       hint:"didn't see",     he:'לא ראיתי'},
+  {q:'We ___ (have) pizza for dinner three times last week.',                     hint:'had',            he:'היה לנו'},
+  {q:'___ (she / wake) up late and miss the bus?',                                hint:'Did she wake',   he:'התעוררה?'},
+];
+
+const GRAM_PER_PAGE = 5;
+let gramPage = 0;
+
+const GRAM_CATEGORIES = [
+  {from:0,  to:39,  label:'Affirmative'},
+  {from:40, to:59,  label:'Affirmative'},
+  {from:60, to:89,  label:'Negative'},
+  {from:90, to:109, label:'Negative'},
+  {from:110,to:139, label:'Questions'},
+  {from:140,to:159, label:'Questions'},
+  {from:160,to:199, label:'Mixed'},
+];
+
+function getCategory(pageStart) {
+  for (const c of GRAM_CATEGORIES) if (pageStart >= c.from && pageStart <= c.to) return c.label;
+  return '';
+}
+
+function buildGrammar() {
+  const container = document.getElementById('gram-items');
+  GRAM.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'gram-item';
+    div.id = 'gramitem_' + idx;
+    div.style.display = idx < GRAM_PER_PAGE ? 'block' : 'none';
+    div.innerHTML = `
+      <div>${idx+1}. ${item.q.replace('___',`<input class="gram-input" id="g${idx}" data-answer="${item.hint}" placeholder="?">`)}</div>
+      <div class="answer-reveal" id="ga${idx}">✅ Answer: <strong>${item.hint}</strong> &nbsp;(${item.he})</div>`;
+    container.appendChild(div);
+  });
+  updateGramNavUI();
+}
+
+function navigateGram(dir) {
+  const maxPage = Math.ceil(GRAM.length / GRAM_PER_PAGE) - 1;
+  const newPage = gramPage + dir;
+  if (newPage < 0 || newPage > maxPage) return;
+  gramPage = newPage;
+  const from = gramPage * GRAM_PER_PAGE;
+  const to   = from + GRAM_PER_PAGE;
+  document.querySelectorAll('.gram-item').forEach((el, idx) => {
+    el.style.display = (idx >= from && idx < to) ? 'block' : 'none';
+  });
+  document.getElementById('gram_score').innerHTML = '';
+  updateGramNavUI();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function updateGramNavUI() {
+  const total   = GRAM.length;
+  const maxPage = Math.ceil(total / GRAM_PER_PAGE) - 1;
+  const from    = gramPage * GRAM_PER_PAGE + 1;
+  const to      = Math.min((gramPage + 1) * GRAM_PER_PAGE, total);
+  document.getElementById('gram-nav-label').textContent = `Q ${from}–${to} / ${total}`;
+  document.getElementById('gram-nav-sub').textContent   = getCategory(from - 1);
+  document.getElementById('gram-btn-prev').disabled = gramPage === 0;
+  document.getElementById('gram-btn-next').disabled = gramPage === maxPage;
+}
+
+function checkGrammar() {
+  const from = gramPage * GRAM_PER_PAGE;
+  const to   = Math.min(from + GRAM_PER_PAGE, GRAM.length);
+  let correct = 0, filled = 0;
+  for (let idx = from; idx < to; idx++) {
+    const inp = document.getElementById('g'+idx);
+    if (!inp) continue;
+    const val = inp.value.trim().toLowerCase();
+    inp.classList.remove('correct','wrong');
+    document.getElementById('ga'+idx).classList.remove('show');
+    if (!val) continue;
+    filled++;
+    if (val === GRAM[idx].hint.toLowerCase()) { inp.classList.add('correct'); correct++; }
+    else { inp.classList.add('wrong'); document.getElementById('ga'+idx).classList.add('show'); }
+  }
+  const el = document.getElementById('gram_score');
+  if (!filled) { el.innerHTML=''; return; }
+  const pct = Math.round(correct/filled*100);
+  el.innerHTML = `<span class="score-badge ${pct===100?'good':pct>=60?'ok':'bad'}">${correct}/${filled} correct (${pct}%)</span>`;
+}
+
+function resetGrammar() {
+  const from = gramPage * GRAM_PER_PAGE;
+  const to   = Math.min(from + GRAM_PER_PAGE, GRAM.length);
+  for (let idx = from; idx < to; idx++) {
+    const inp = document.getElementById('g'+idx);
+    if (inp) { inp.value=''; inp.classList.remove('correct','wrong'); }
+    const rev = document.getElementById('ga'+idx);
+    if (rev) rev.classList.remove('show');
+  }
+  document.getElementById('gram_score').innerHTML='';
+}
+
+// ══════════════════════════════════════════════════════
+//  WORD LIST
+// ══════════════════════════════════════════════════════
+const WORDS = {
+  wg62:[
+    ['advantage','n','יתרון'],['church','n','כנסייה'],['country','n','מדינה / ארץ'],
+    ['credit card','n','כרטיס אשראי'],['flight','n','טיסה'],['flower','n','פרח'],
+    ['guy','n','בחור / חבר'],['line','n','שורה / קו'],['mail','n','דואר'],
+    ['mosque','n','מסגד'],['passenger','n','נוסע'],['pilot','n','טייס'],
+    ['plane','n','מטוס'],['synagogue','n','בית כנסת'],['vacation','n','חופשה'],
+    ['insist','v','להתעקש'],['offer','v','להציע'],['remain','v','להישאר'],
+    ['take off','v','להמריא'],['think','v','לחשוב'],
+    ['central','adj','מרכזי'],['Christian','adj','נוצרי'],['cool','adj','מגניב / קריר'],
+    ['Jewish','adj','יהודי'],['Muslim','adj','מוסלמי'],['useful','adj','שימושי'],
+    ['at the moment','exp','כרגע'],['even','exp','אפילו'],['have a good time','exp','להנות'],
+    ['near','exp','קרוב'],['normally','exp','בדרך כלל'],['take a tour','exp','לסייר'],
+  ],
+  wg72:[
+    ['action','n','פעולה'],['adventure','n','הרפתקה'],['arrival','n','הגעה'],
+    ['conversation','n','שיחה'],['difficulty','n','קושי'],['Earth','n','כדור הארץ'],
+    ['effect','n','השפעה'],['energy','n','אנרגיה'],['experience','n','ניסיון / חוויה'],
+    ['hero','n','גיבור'],['opinion','n','דעה'],['purpose','n','מטרה'],
+    ['sort','n','סוג'],['space','n','חלל'],
+    ['beat','v','להכות / לנצח'],['fight','v','להילחם'],['land','v','לנחות'],
+    ['manage','v','להצליח / לנהל'],['save','v','להציל'],
+    ['impossible','adj','בלתי אפשרי'],['ordinary','adj','רגיל'],['real','adj','אמיתי'],
+    ['simple','adj','פשוט'],['wonderful','adj','נפלא'],
+    ['although','exp','למרות ש'],['especially','exp','במיוחד'],
+    ['in fact','exp','למעשה'],['throughout','exp','לאורך כל'],
+  ],
+  wg90:[
+    ['airplane','n','מטוס'],['amount','n','כמות'],['area','n','אזור'],
+    ['bottom','n','תחתית'],['control','n','שליטה'],['death','n','מוות'],
+    ['island','n','אי'],['mystery','n','תעלומה'],['ocean','n','אוקיינוס'],
+    ['peace','n','שלום / שלווה'],['sign','n','שלט / סימן'],['story','n','סיפור'],
+    ['admit','v','להודות'],['disappear','v','להיעלם'],['jump (off)','v','לקפוץ (מ)'],
+    ['repeat','v','לחזור על'],['respond','v','להגיב'],['solve','v','לפתור'],
+    ['survive','v','לשרוד'],['wonder','v','לתהות'],
+    ['additional','adj','נוסף'],['deep','adj','עמוק'],
+    ['(be) able to','exp','להיות מסוגל'],['could','exp','יכול היה'],
+    ['definitely','exp','בהחלט'],['however','exp','אולם / עם זאת'],
+    ['suddenly','exp','לפתע / פתאום'],
+  ]
+};
+
+function buildWordList() {
+  Object.entries(WORDS).forEach(([gridId, words]) => {
+    const grid = document.getElementById(gridId);
+    words.forEach(([word, pos, he]) => {
+      const div = document.createElement('div');
+      div.className = 'word-item';
+      div.dataset.showing = 'en';
+      div.innerHTML = `<span class="pos">${pos}</span>${word}`;
+      div.addEventListener('click', () => {
+        if (div.dataset.showing === 'en') {
+          div.innerHTML = `<span class="pos">עברית</span>${he}`;
+          div.style.background = '#ede9fe'; div.dataset.showing = 'he';
+        } else {
+          div.innerHTML = `<span class="pos">${pos}</span>${word}`;
+          div.style.background = ''; div.dataset.showing = 'en';
+        }
+      });
+      grid.appendChild(div);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  VERB TABLE
+// ══════════════════════════════════════════════════════
+const VERBS = [
+  ['be','was / were','היה'],['beat','beat','ניצח'],['begin','began','התחיל'],
+  ['break','broke','שבר'],['bring','brought','הביא'],['build','built','בנה'],
+  ['buy','bought','קנה'],['catch','caught','תפס'],['choose','chose','בחר'],
+  ['come','came','בא'],['do','did','עשה'],['drink','drank','שתה'],
+  ['drive','drove','נהג'],['eat','ate','אכל'],['fall','fell','נפל'],
+  ['feel','felt','הרגיש'],['fight','fought','נלחם'],['find','found','מצא'],
+  ['fly','flew','טס'],['forget','forgot','שכח'],['get','got','קיבל'],
+  ['give','gave','נתן'],['go','went','הלך'],['grow','grew','גדל'],
+  ['have','had','היה לו'],['hear','heard','שמע'],['hit','hit','פגע'],
+  ['hold','held','החזיק'],['keep','kept','שמר'],['know','knew','ידע'],
+  ['leave','left','עזב'],['lose','lost','הפסיד / איבד'],['make','made','עשה / יצר'],
+  ['meet','met','פגש'],['pay','paid','שילם'],['put','put','שם'],
+  ['read','read','קרא'],['ride','rode','רכב'],['run','ran','רץ'],
+  ['say','said','אמר'],['see','saw','ראה'],['sell','sold','מכר'],
+  ['send','sent','שלח'],['sit','sat','ישב'],['sleep','slept','ישן'],
+  ['speak','spoke','דיבר'],['spend','spent','בילה / הוציא'],['stand','stood','עמד'],
+  ['swim','swam','שחה'],['take','took','לקח'],['teach','taught','לימד'],
+  ['tell','told','סיפר'],['think','thought','חשב'],['understand','understood','הבין'],
+  ['wake','woke','התעורר'],['win','won','ניצח'],['write','wrote','כתב'],
+];
+
+function buildVerbTable() {
+  const tbody = document.getElementById('verb-tbody');
+  VERBS.forEach(([base,past,he]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><strong>${base}</strong></td><td style="color:#4f46e5;font-weight:600">${past}</td><td style="color:#6b7280">${he}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  CONNECTORS  (100 exercises, 5 per page)
+// ══════════════════════════════════════════════════════
+const CONNECTORS = [
+  // Result (15)
+  {q:'I woke up late. ___, I missed the bus to school.',                               answer:'As a result,',   options:['As a result,','However,','Although','For example,']},
+  {q:'It was raining heavily. ___, we decided to stay indoors.',                       answer:'Therefore,',     options:['Therefore,','Although','In addition,','For example,']},
+  {q:'She studied very hard. ___, she passed the exam with a great score.',            answer:'As a result,',   options:['As a result,','However,','Even though','Finally,']},
+  {q:'The road was icy and dangerous. ___, the police closed it.',                     answer:'For this reason,',options:['For this reason,','However,','In addition,','Although']},
+  {q:'He forgot his homework. ___, the teacher was not happy.',                        answer:'As a result,',   options:['As a result,','Although','For instance,','While']},
+  {q:'The weather was perfect. ___, we decided to go to the beach.',                   answer:'Therefore,',     options:['Therefore,','However,','In addition,','Although']},
+  {q:'She practised every day. ___, she became a great musician.',                     answer:'As a result,',   options:['As a result,','However,','Although','For example,']},
+  {q:'The shop was closed. ___, we couldn\'t buy the tickets.',                        answer:'Therefore,',     options:['Therefore,','Although','In addition,','For instance,']},
+  {q:'He ate too much. ___, he felt sick afterwards.',                                 answer:'As a result,',   options:['As a result,','However,','First,','Although']},
+  {q:'The test was very difficult. ___, many students failed it.',                     answer:'For this reason,',options:['For this reason,','However,','In addition,','Although']},
+  {q:'She missed the last bus. ___, she had to walk home.',                            answer:'Therefore,',     options:['Therefore,','However,','Although','In addition,']},
+  {q:'He didn\'t sleep well the night before. ___, he felt tired all day.',           answer:'As a result,',   options:['As a result,','Although','For example,','Finally,']},
+  {q:'The library was closed on Sundays. ___, I couldn\'t return the books.',         answer:'For this reason,',options:['For this reason,','However,','In addition,','Although']},
+  {q:'She worked very hard all year. ___, she got the top grade in the class.',       answer:'As a result,',   options:['As a result,','However,','Even though','For instance,']},
+  {q:'The game was cancelled because of the storm. ___, the fans were very disappointed.',answer:'Therefore,', options:['Therefore,','Although','In addition,','For example,']},
+  // However (10)
+  {q:'I like chocolate. ___, I try not to eat too much of it.',                        answer:'However,',       options:['However,','Therefore,','In addition,','For example,']},
+  {q:'The film was very long. ___, it was incredibly interesting.',                    answer:'However,',       options:['However,','Therefore,','As a result,','For instance,']},
+  {q:'She wanted to go to the party. ___, she had to stay home and study.',           answer:'However,',       options:['However,','Therefore,','In addition,','Although']},
+  {q:'The restaurant was expensive. ___, the food was absolutely delicious.',          answer:'However,',       options:['However,','Therefore,','As a result,','For example,']},
+  {q:'He didn\'t study much. ___, he passed the test easily.',                        answer:'However,',       options:['However,','Therefore,','In addition,','For instance,']},
+  {q:'The weather looked bad in the morning. ___, the match continued as planned.',   answer:'However,',       options:['However,','Therefore,','As a result,','Although']},
+  {q:'He was very tired. ___, he stayed up late to finish his homework.',             answer:'However,',       options:['However,','Therefore,','In addition,','For example,']},
+  {q:'The project took a very long time. ___, we are very happy with the result.',    answer:'However,',       options:['However,','Therefore,','As a result,','For instance,']},
+  {q:'I wanted to buy the book. ___, it was far too expensive.',                      answer:'However,',       options:['However,','Therefore,','In addition,','Although']},
+  {q:'It looked like it was going to rain all day. ___, the sun came out in the afternoon.',answer:'However,', options:['However,','Therefore,','As a result,','For example,']},
+  // Although / Even though (10)
+  {q:'___ it was very cold, we went swimming in the sea.',                             answer:'Although',       options:['Although','Therefore,','In addition,','For example,']},
+  {q:'___ she was very tired, she finished all her homework.',                         answer:'Even though',    options:['Even though','Therefore,','In addition,','For instance,']},
+  {q:'___ he practised every day, he didn\'t win the competition.',                   answer:'Although',       options:['Although','Therefore,','As a result,','In addition,']},
+  {q:'___ it was very late, the children didn\'t want to go to sleep.',               answer:'Even though',    options:['Even though','Therefore,','In addition,','For example,']},
+  {q:'___ I was very nervous, I gave a great presentation to the class.',             answer:'Although',       options:['Although','Therefore,','As a result,','In addition,']},
+  {q:'___ the film was very long, I didn\'t feel bored for a single moment.',        answer:'Although',       options:['Although','Therefore,','In addition,','For instance,']},
+  {q:'___ she had never cooked before, the meal she made was absolutely delicious.',  answer:'Even though',    options:['Even though','Therefore,','As a result,','For example,']},
+  {q:'___ the questions were very difficult, she answered them all correctly.',        answer:'Even though',    options:['Even though','Therefore,','In addition,','Although']},
+  {q:'___ we arrived quite late, we still managed to get very good seats.',           answer:'Although',       options:['Although','Therefore,','As a result,','For instance,']},
+  {q:'___ the weather was bad all week, we had a wonderful time on our holiday.',    answer:'Even though',    options:['Even though','Therefore,','In addition,','For example,']},
+  // Order connectors (15)
+  {q:'___, mix the flour and the eggs together in a large bowl.',                      answer:'First,',         options:['First,','However,','Therefore,','In conclusion,']},
+  {q:'I woke up. ___, I had a quick breakfast before leaving.',                        answer:'Then',           options:['Then','However,','Therefore,','Although']},
+  {q:'She finished her homework. ___, she went outside to play with her friends.',    answer:'Then',           options:['Then','However,','As a result,','Although']},
+  {q:'We visited the museum in the morning. ___, we went to a restaurant for lunch.', answer:'Next,',          options:['Next,','However,','Therefore,','Although']},
+  {q:'They searched for a very long time. ___, they found the missing keys.',         answer:'Finally,',       options:['Finally,','However,','Although','In addition,']},
+  {q:'___ my sister was sleeping, I quietly finished my homework in the kitchen.',    answer:'While',          options:['While','However,','Therefore,','Although']},
+  {q:'___, read all the instructions carefully before you start the exercise.',        answer:'First,',         options:['First,','However,','In conclusion,','As a result,']},
+  {q:'He opened the book and sat down. ___, he read the entire first chapter.',      answer:'Then',           options:['Then','However,','Although','In addition,']},
+  {q:'She cleaned the table. ___, she carefully set the plates, glasses and cutlery.',answer:'Next,',          options:['Next,','However,','Therefore,','Although']},
+  {q:'___ I was cooking dinner, my brother was quietly setting the table.',           answer:'While',          options:['While','However,','Therefore,','Although']},
+  {q:'___, let me explain exactly what happened at the very beginning.',              answer:'First,',         options:['First,','However,','In conclusion,','Although']},
+  {q:'We packed our bags and got dressed. ___, we called a taxi to the airport.',    answer:'Next,',          options:['Next,','However,','Although','As a result,']},
+  {q:'They waited outside for several hours. ___, the concert finally began.',        answer:'Finally,',       options:['Finally,','However,','Although','In addition,']},
+  {q:'___ she was talking on the phone, her dinner went completely cold.',            answer:'While',          options:['While','However,','Therefore,','Although']},
+  {q:'___, always check your work carefully before you hand it in to the teacher.',   answer:'Finally,',       options:['Finally,','However,','Although','As a result,']},
+  // Addition (10)
+  {q:'She is very intelligent. ___, she is incredibly kind to everyone around her.',  answer:'In addition,',   options:['In addition,','However,','Therefore,','Although']},
+  {q:'He can play the piano. He can ___ play the guitar and the drums.',             answer:'also',           options:['also','however','therefore','although']},
+  {q:'We visited Rome ___ Florence and Venice on our trip to Italy.',                 answer:'as well as',     options:['as well as','however,','although','therefore,']},
+  {q:'The hotel was very comfortable. ___, the food was absolutely excellent.',       answer:'In addition,',   options:['In addition,','However,','Therefore,','Although']},
+  {q:'She studies maths every day. She ___ studies science and history.',             answer:'also',           options:['also','however','therefore','although']},
+  {q:'He speaks English and Hebrew ___ French and a little Spanish.',                 answer:'as well as',     options:['as well as','however,','although','therefore,']},
+  {q:'The lesson was very useful. ___, it was a lot of fun for everyone.',            answer:'In addition,',   options:['In addition,','However,','Therefore,','Although']},
+  {q:'I enjoy swimming in the sea. I ___ enjoy cycling in the mountains.',            answer:'also',           options:['also','however','therefore','although']},
+  {q:'She bought a beautiful new dress ___ a pair of matching shoes.',                answer:'as well as',     options:['as well as','however,','although','therefore,']},
+  {q:'The trip was very exciting and different. ___, we learned many new things.',    answer:'In addition,',   options:['In addition,','However,','Therefore,','Although']},
+  // Example (10)
+  {q:'There are many ways to stay healthy. ___, you can exercise every single day.',  answer:'For example,',   options:['For example,','However,','Therefore,','In addition,']},
+  {q:'Many animals hibernate during winter. Bears, ___, sleep for several months.',   answer:'for instance,',  options:['for instance,','however,','therefore,','in addition,']},
+  {q:'Some hobbies can help you relax and feel calm. ___, drawing or reading is very helpful.',answer:'For example,',options:['For example,','However,','Therefore,','In addition,']},
+  {q:'She has visited many countries around the world. ___, she went to Japan last year.',answer:'For instance,',options:['For instance,','However,','Therefore,','Although']},
+  {q:'There are many different types of music you can enjoy. ___, jazz, pop, and classical.',answer:'For example,',options:['For example,','However,','In addition,','Although']},
+  {q:'Some foods are extremely healthy and good for you. ___, broccoli is packed with vitamins.',answer:'For instance,',options:['For instance,','However,','Therefore,','In addition,']},
+  {q:'You can improve your English in many different ways. ___, watching films in English is very helpful.',answer:'For example,',options:['For example,','However,','In addition,','Although']},
+  {q:'Some animals are extremely intelligent. ___, dolphins can learn very complex tasks.',answer:'For instance,',options:['For instance,','However,','Therefore,','In addition,']},
+  {q:'There are many different ways to travel around a country. ___, you can go by plane, train or car.',answer:'For example,',options:['For example,','However,','In addition,','Although']},
+  {q:'Many scientists have completely changed the world we live in. ___, Einstein changed how we think about time and space.',answer:'For instance,',options:['For instance,','However,','Therefore,','In addition,']},
+  // Summary (5)
+  {q:'The trip was expensive and tiring. ___, it was a truly wonderful experience.',  answer:'In conclusion,', options:['In conclusion,','However,','Therefore,','In addition,']},
+  {q:'We visited many amazing places and met many interesting people. ___, it was a perfect holiday.',answer:'To sum up,',options:['To sum up,','However,','Therefore,','In addition,']},
+  {q:'She worked very hard and never gave up on her dream. ___, she achieved everything she wanted.',answer:'In conclusion,',options:['In conclusion,','However,','Therefore,','Although']},
+  {q:'The project was difficult but incredibly rewarding. ___, we are all proud of what we created.',answer:'To sum up,',options:['To sum up,','However,','Therefore,','In addition,']},
+  {q:'___, learning a language takes time and patience, but it is absolutely worth it.',answer:'To sum up,',   options:['To sum up,','However,','Therefore,','In addition,']},
+  // On the one hand / On the other hand (5)
+  {q:'___, living in a big city is very exciting. On the other hand, it can be very stressful.',answer:'On the one hand,',options:['On the one hand,','However,','Therefore,','In addition,']},
+  {q:'On the one hand, technology makes life much easier. ___, it can also be a big distraction.',answer:'On the other hand,',options:['On the other hand,','However,','Therefore,','In addition,']},
+  {q:'___, travelling abroad is a wonderful way to learn about other cultures and people.',answer:'On the one hand,',options:['On the one hand,','However,','Therefore,','In addition,']},
+  {q:'On the one hand, sport keeps you very fit and healthy. ___, it can sometimes cause injuries.',answer:'On the other hand,',options:['On the other hand,','However,','Therefore,','In addition,']},
+  {q:'___, social media helps people stay connected. On the other hand, it can become addictive.',answer:'On the one hand,',options:['On the one hand,','However,','Therefore,','Although']},
+  // Mixed (20)
+  {q:'I was extremely hungry after school. ___, I ate two sandwiches and a piece of fruit.',answer:'As a result,',options:['As a result,','Although','For example,','Finally,']},
+  {q:'___, pack your bag and have breakfast before you leave for school.',             answer:'First,',         options:['First,','However,','In conclusion,','Although']},
+  {q:'He is very talented at maths. He is ___ very talented at science.',             answer:'also',           options:['also','however','therefore','although']},
+  {q:'___ he tried very hard indeed, he still couldn\'t solve the difficult problem.', answer:'Although',      options:['Although','Therefore,','In addition,','For example,']},
+  {q:'There are many types of exercise you can do. ___, running is one of the easiest to start.',answer:'For example,',options:['For example,','However,','In addition,','Although']},
+  {q:'The homework was very easy tonight. ___, I finished it in just ten minutes.',   answer:'Therefore,',     options:['Therefore,','Although','In addition,','For instance,']},
+  {q:'___ my parents were watching TV in the living room, I was quietly reading in my room.',answer:'While',   options:['While','However,','Therefore,','Although']},
+  {q:'She is a wonderful singer ___ an excellent dancer as well.',                    answer:'as well as',     options:['as well as','however,','although','therefore,']},
+  {q:'The test turned out to be very easy. ___, almost everyone in the class passed it.',answer:'As a result,',options:['As a result,','Although','For example,','In addition,']},
+  {q:'___, it is very important to study a little bit every single day.',             answer:'In conclusion,', options:['In conclusion,','However,','Therefore,','For example,']},
+  {q:'He bought some brand new shoes at the mall. ___, he bought a new jacket.',      answer:'In addition,',   options:['In addition,','However,','Therefore,','Although']},
+  {q:'___ she was feeling quite sick, she still finished her important presentation.', answer:'Even though',   options:['Even though','Therefore,','In addition,','For example,']},
+  {q:'Some sports can be quite dangerous. ___, rock climbing requires a great deal of special training.',answer:'For instance,',options:['For instance,','However,','Therefore,','In addition,']},
+  {q:'We had a delicious dinner together. ___, we all sat down and watched a film.',  answer:'Then',           options:['Then','However,','Although','As a result,']},
+  {q:'She forgot her umbrella this morning. ___, she got completely soaked in the rain.',answer:'As a result,',options:['As a result,','Although','For example,','Finally,']},
+  {q:'Many children learn to play musical instruments. ___, the piano is one of the most popular.',answer:'For example,',options:['For example,','However,','In addition,','Although']},
+  {q:'___ the food at the restaurant was not very good, we still had a wonderful evening together.',answer:'Although',options:['Although','Therefore,','As a result,','In addition,']},
+  {q:'He works incredibly hard every single day. ___, his results at school are always excellent.',answer:'Therefore,',options:['Therefore,','However,','In addition,','Although']},
+  {q:'___ I was sitting on the bus home, I suddenly saw an old friend walking down the street.',answer:'While',options:['While','However,','Therefore,','Although']},
+  {q:'___, visiting new and different places teaches you a great deal about the world we live in.',answer:'To sum up,',options:['To sum up,','However,','Therefore,','In addition,']},
+];
+
+const CONN_PER_PAGE = 5;
+let connPage = 0;
+
+const CONN_CATEGORIES = [
+  {from:0,  label:'Result'},
+  {from:15, label:'Contrast: However'},
+  {from:25, label:'Contrast: Although'},
+  {from:35, label:'Order'},
+  {from:50, label:'Addition'},
+  {from:60, label:'Example'},
+  {from:70, label:'Summary & On the other hand'},
+  {from:80, label:'Mixed'},
+];
+
+function getConnCategory(idx) {
+  let cat = CONN_CATEGORIES[0].label;
+  for (const c of CONN_CATEGORIES) if (idx >= c.from) cat = c.label;
+  return cat;
+}
+
+function buildConn() {
+  const container = document.getElementById('conn-items');
+  CONNECTORS.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'conn-exercise';
+    div.id = 'connitem_' + idx;
+    div.style.display = idx < CONN_PER_PAGE ? 'block' : 'none';
+
+    const sentence = item.q.replace('___', '<span class="conn-blank">___</span>');
+    const shuffled = [...item.options].sort(() => Math.random() - 0.5);
+
+    div.innerHTML = `
+      <div style="font-size:0.78rem;color:#9ca3af;margin-bottom:4px;">${idx + 1}.</div>
+      <div class="conn-sentence">${sentence}</div>
+      <div class="conn-options" id="copts_${idx}">
+        ${shuffled.map(o => `<button class="conn-opt" data-value="${o}" onclick="selectConnOpt(this,${idx})">${o}</button>`).join('')}
+      </div>`;
+    container.appendChild(div);
+  });
+  updateConnNavUI();
+}
+
+function selectConnOpt(btn, idx) {
+  document.querySelectorAll(`#copts_${idx} .conn-opt`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function navigateConn(dir) {
+  const maxPage = Math.ceil(CONNECTORS.length / CONN_PER_PAGE) - 1;
+  const newPage = connPage + dir;
+  if (newPage < 0 || newPage > maxPage) return;
+  connPage = newPage;
+  const from = connPage * CONN_PER_PAGE;
+  const to   = from + CONN_PER_PAGE;
+  document.querySelectorAll('.conn-exercise').forEach((el, idx) => {
+    el.style.display = (idx >= from && idx < to) ? 'block' : 'none';
+  });
+  document.getElementById('conn_score').innerHTML = '';
+  updateConnNavUI();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function updateConnNavUI() {
+  const total   = CONNECTORS.length;
+  const maxPage = Math.ceil(total / CONN_PER_PAGE) - 1;
+  const from    = connPage * CONN_PER_PAGE;
+  const fromQ   = from + 1;
+  const toQ     = Math.min(from + CONN_PER_PAGE, total);
+  document.getElementById('conn-nav-label').textContent = `Q ${fromQ}–${toQ} / ${total}`;
+  document.getElementById('conn-nav-sub').textContent   = getConnCategory(from);
+  document.getElementById('conn-btn-prev').disabled = connPage === 0;
+  document.getElementById('conn-btn-next').disabled = connPage === maxPage;
+}
+
+function checkConn() {
+  const from = connPage * CONN_PER_PAGE;
+  const to   = Math.min(from + CONN_PER_PAGE, CONNECTORS.length);
+  let correct = 0, filled = 0;
+  for (let idx = from; idx < to; idx++) {
+    const sel = document.querySelector(`#copts_${idx} .conn-opt.selected`);
+    document.querySelectorAll(`#copts_${idx} .conn-opt`).forEach(b => {
+      b.classList.remove('correct','wrong','reveal');
+      if (b.dataset.value.toLowerCase() === CONNECTORS[idx].answer.toLowerCase()) b.classList.add('reveal');
+    });
+    if (!sel) continue;
+    filled++;
+    if (sel.dataset.value.toLowerCase() === CONNECTORS[idx].answer.toLowerCase()) {
+      sel.classList.add('correct'); sel.classList.remove('reveal'); correct++;
+      connCorrect.add(idx);
+    } else {
+      sel.classList.add('wrong');
+      connCorrect.delete(idx);
+    }
+  }
+  updateScoreDisplay();
+  const el = document.getElementById('conn_score');
+  if (!filled) { el.innerHTML = ''; return; }
+  const pct = Math.round(correct / filled * 100);
+  el.innerHTML = `<span class="score-badge ${pct===100?'good':pct>=60?'ok':'bad'}">${correct}/${filled} correct (${pct}%)</span>`;
+}
+
+function resetConn() {
+  const from = connPage * CONN_PER_PAGE;
+  const to   = Math.min(from + CONN_PER_PAGE, CONNECTORS.length);
+  for (let idx = from; idx < to; idx++) {
+    document.querySelectorAll(`#copts_${idx} .conn-opt`).forEach(b => b.classList.remove('selected','correct','wrong','reveal'));
+  }
+  document.getElementById('conn_score').innerHTML = '';
+}
+
+// ══════════════════════════════════════════════════════
+//  SCORE TRACKING
+// ══════════════════════════════════════════════════════
+const vocabCorrect = new Set();
+const gramCorrect  = new Set();
+const connCorrect  = new Set();
+
+const VOCAB_TOTAL = PASSAGES.reduce((s, p) => s + p.segments.filter(x => typeof x === 'object').length, 0);
+const GRAM_TOTAL  = GRAM.length;
+const CONN_TOTAL  = CONNECTORS.length;
+
+function updateScoreDisplay() {
+  const vc = vocabCorrect.size, gc = gramCorrect.size, cc = connCorrect.size;
+  const total_c = vc + gc + cc;
+  const total_t = VOCAB_TOTAL + GRAM_TOTAL + CONN_TOTAL;
+  const pct     = total_t > 0 ? Math.round(total_c / total_t * 100) : 0;
+
+  pill('sv', vc, VOCAB_TOTAL);
+  pill('sg', gc, GRAM_TOTAL);
+  pill('sc', cc, CONN_TOTAL);
+  const sp = document.getElementById('st');
+  sp.textContent = total_c > 0 ? pct + '%' : '–';
+  sp.className = 'score-pill ' + (pct >= 80 ? 'great' : pct >= 50 ? 'good' : total_c > 0 ? 'low' : '');
+}
+
+function pill(id, correct, total) {
+  const el = document.getElementById(id);
+  el.textContent = `${correct}/${total}`;
+  const pct = total > 0 ? correct / total : 0;
+  el.className = 'score-pill ' + (pct >= 0.8 ? 'great' : pct >= 0.5 ? 'good' : correct > 0 ? 'low' : '');
+}
+
+// ── Patch checkPassage to track score ──────────────────
+const _origCheckPassage = checkPassage;
+checkPassage = function(pid, count) {
+  _origCheckPassage(pid, count);
+  for (let n = 1; n <= count; n++) {
+    const zone = document.getElementById(`${pid}_${n}`);
+    if (!zone || !zone.dataset.placed) continue;
+    const key = `${pid}_${n}`;
+    const placed = zone.dataset.placed.toLowerCase().replace(/ed$/,'');
+    const ans    = zone.dataset.answer.toLowerCase().replace(/ed$/,'');
+    if (placed === ans) vocabCorrect.add(key); else vocabCorrect.delete(key);
+  }
+  updateScoreDisplay();
+};
+
+// ── Patch checkGrammar to track score ─────────────────
+const _origCheckGrammar = checkGrammar;
+checkGrammar = function() {
+  _origCheckGrammar();
+  const from = gramPage * GRAM_PER_PAGE;
+  const to   = Math.min(from + GRAM_PER_PAGE, GRAM.length);
+  for (let idx = from; idx < to; idx++) {
+    const inp = document.getElementById('g' + idx);
+    if (!inp || !inp.value.trim()) continue;
+    if (inp.classList.contains('correct')) gramCorrect.add(idx);
+    else gramCorrect.delete(idx);
+  }
+  updateScoreDisplay();
+};
+
+// ── Init ────────────────────────────────────────────────
+buildVocab();
+buildGrammar();
+buildConn();
+buildWordList();
+buildVerbTable();
+updateScoreDisplay();
+</script>
+</body>
+</html>
